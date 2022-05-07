@@ -1,7 +1,9 @@
 import { ArrowLeft } from "phosphor-react";
 import React, { FormEvent, useState } from "react";
 import { FeedbackType, feedbackTypes } from ".";
+import { api } from "../../lib/api";
 import { CloseButton } from "../CloseButton";
+import { Loading } from "./Loading";
 import { ScreenshotButton } from "./ScreenshotButton";
 
 interface FeedbackContentStepProps {
@@ -18,10 +20,21 @@ export function FeedbackContentStep({
   const feedbackTypeInfo = feedbackTypes[feedbackType];
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [comment, setComment] = useState("");
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
 
-  function handleSubmitFeedback(event: FormEvent) {
+  async function handleSubmitFeedback(event: FormEvent) {
     event?.preventDefault();
-    console.log({ screenshot, comment });
+
+    setIsSendingFeedback(true);
+
+    await api.post("/feedbacks", {
+      type: feedbackType,
+      comment,
+      screenshot,
+    });
+
+    setIsSendingFeedback(false);
+
     onFeedbackSent();
   }
 
@@ -57,11 +70,11 @@ export function FeedbackContentStep({
             onScreenshotTook={setScreenshot}
           />
           <button
-            disabled={comment.length === 0}
+            disabled={comment.length === 0 || isSendingFeedback}
             type="submit"
             className="p-2 bg-rocket-brand rounded-md border-transparent flex-1 flex justify-center items-center text-sm hover:bg-rocket-brand-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:ring-rocket-brand transition-colors duration-200 disabled:opacity-50 disabled:hover:bg-rocket-brand"
           >
-            Enviar Feedback
+            {isSendingFeedback ? <Loading /> : <>Enviar Feedback</>}
           </button>
         </footer>
       </form>
